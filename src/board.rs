@@ -185,8 +185,6 @@ impl Board {
         }
 
         //Check to see if we are at the end of the board, to king the piece.
-        println!("Pos: {}, {}", new_loc.0, new_loc.1);
-        println!("Size: {}", self.size);
         match (piece_type, new_loc.0) {
             (Tile::BlackChecker, 0) => {
                 self.board[new_loc.0 as usize][new_loc.1 as usize] = Tile::BlackKing; 
