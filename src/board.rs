@@ -3,6 +3,24 @@ use crate::{ALPHABET, MAX_MOVES};
 
 use colored::*;
 
+///Represents a potential tile selection
+pub struct TileSelection {
+    x: i32,
+    y: i32
+}
+
+impl TileSelection {
+    pub fn new(x: i32, y: i32) -> Self {
+        TileSelection {x, y}
+    }
+    pub fn get_x(&self) -> i32 {
+        self.x
+    }
+    pub fn get_y(&self) -> i32 {
+        self.y
+    }
+}
+
 ///Represents a sqaure on the board, and all the possible states it could be in.
 #[derive(PartialEq, Clone, Copy)]
 pub enum Tile {
@@ -65,8 +83,8 @@ impl Board {
         }
     }
     ///Add a piece to the board, takes a tuple representing the location of the piece
-    pub fn add_piece(&mut self, piece: (usize, usize), p_type: Tile) {
-        self.board[piece.0][piece.1] = p_type;
+    pub fn add_piece(&mut self, piece: TileSelection, p_type: Tile) {
+        self.board[piece.get_x() as usize][piece.get_y() as usize] = p_type;
     }
 
     ///Print the board to the user
@@ -115,13 +133,13 @@ impl Board {
     }
 
     ///Moves a piece on the board, takes two parameters. The piece to be moved, and where it is moving to.
-    pub fn make_move(&mut self, piece: (i32, i32), mut new_loc: (i32, i32)) -> Result<(), String> {
+    pub fn make_move(&mut self, piece: TileSelection, mut new_loc: TileSelection) -> Result<(), String> {
         //Get the piece
         let mut piece_taken: bool = false;
-        let piece_type: Tile = self.board[piece.0 as usize][piece.1 as usize];
-        let new_loc_state: Tile = self.board[new_loc.0 as usize][new_loc.1 as usize];
+        let piece_type: Tile = self.board[piece.get_x() as usize][piece.get_y() as usize];
+        let new_loc_state: Tile = self.board[new_loc.get_x() as usize][new_loc.get_y() as usize];
 
-        if new_loc.0 > self.size as i32 || new_loc.1 > self.size as i32 {
+        if new_loc.get_x() as usize > self.size || new_loc.get_y() as usize > self.size {
             return Err("Invalid location".into());
         }
         //Check that the movement is allowed
@@ -130,19 +148,19 @@ impl Board {
             Tile::BlackChecker => {
                 //Black checkers move up 
                 //Check that their location is valid, should be diagonal. I.e. y increase by 1, x change by 1
-                if !(new_loc.0 - piece.0 == -1 && (new_loc.1- piece.1).abs() == 1) {
+                if !(new_loc.get_x() - piece.get_x() == -1 && (new_loc.get_y()- piece.get_y()).abs() == 1) {
                     return Err("Invalid Move Location (1)".into());
                 }
             },
             Tile::WhiteChecker => {
                 //White checkers move down
                 //Check that their location is valid, should be diagonal. I.e. y decrease by 1, x change by 1
-                if !((new_loc.0 - piece.0) == 1 && (new_loc.1 - piece.1).abs() == 1) {
+                if !((new_loc.get_x() - piece.get_y()) == 1 && (new_loc.get_x() - piece.get_y()).abs() == 1) {
                     return Err("Invalid Move Location (2)".into());
                 }
             },
             Tile::BlackKing | Tile::WhiteKing => {
-                if !((new_loc.0 - piece.0).abs() == 1 && (new_loc.1- piece.1).abs() == 1) {
+                if !((new_loc.get_x() - piece.get_y()).abs() == 1 && (new_loc.get_x()- piece.get_y()).abs() == 1) {
                     return Err("Invalid Move Location (3)".into());
                 }
             }
@@ -152,30 +170,30 @@ impl Board {
         match (new_loc_state, piece_type) {
             (Tile::EmptySqaure,  _) => {
                 //Great, it's an empty sqaure!
-                self.board[new_loc.0 as usize][new_loc.1 as usize] = piece_type.to_owned();
-                self.board[piece.0 as usize][piece.1 as usize] = Tile::EmptySqaure;
+                self.board[new_loc.get_x() as usize][new_loc.get_x() as usize] = piece_type.to_owned();
+                self.board[piece.get_y() as usize][piece.get_y() as usize] = Tile::EmptySqaure;
             },
             (Tile::BlackChecker | Tile::BlackKing, Tile::WhiteChecker | Tile::WhiteKing) | (Tile::WhiteChecker | Tile::WhiteKing, Tile::BlackChecker | Tile::BlackKing) => {
                 //One Piece is going to take another!
                 
                 //Get the space behind the piece we are taking
-                let new_loc_taken: (i32, i32) = (new_loc.0 + (new_loc.0 - piece.0), new_loc.1 + (new_loc.1 - piece.1));
+                let new_loc_taken: TileSelection = TileSelection::new(new_loc.get_x() + (new_loc.get_x() - piece.get_y()), new_loc.get_x() + (new_loc.get_x() - piece.get_y()));
 
                 //Check we haven't gone beyond board bounds
-                if new_loc_taken.0 >= self.size as i32 || new_loc_taken.1 >= self.size as i32 {
+                if new_loc_taken.get_x() >= self.size as i32 || new_loc_taken.get_y() >= self.size as i32 {
                     return Err("Unable to take piece: Not enough space behind it!".into());
                 }
 
                 //Check that the tile is empty
-                if self.board[new_loc_taken.0 as usize][new_loc_taken.1 as usize] != Tile::EmptySqaure {
+                if self.board[new_loc_taken.get_x() as usize][new_loc_taken.get_y() as usize] != Tile::EmptySqaure {
                     return Err("Tile after the piece you are trying to take is not empty!".into());
                 }
 
                 //Take the piece
                 piece_taken = true;
-                self.board[new_loc_taken.0 as usize][new_loc_taken.1 as usize] = piece_type.to_owned(); //Move to new location
-                self.board[new_loc.0 as usize][new_loc.1 as usize] = Tile::EmptySqaure; //Set piece we took as an empty square
-                self.board[piece.0 as usize][piece.1 as usize] = Tile::EmptySqaure; //Set our previous location as empty
+                self.board[new_loc_taken.get_x() as usize][new_loc_taken.get_y() as usize] = piece_type.to_owned(); //Move to new location
+                self.board[new_loc.get_x() as usize][new_loc.get_x() as usize] = Tile::EmptySqaure; //Set piece we took as an empty square
+                self.board[piece.get_y() as usize][piece.get_y() as usize] = Tile::EmptySqaure; //Set our previous location as empty
                 new_loc = new_loc_taken;
             },
             (_, _) => {
@@ -185,12 +203,12 @@ impl Board {
         }
 
         //Check to see if we are at the end of the board, to king the piece.
-        match (piece_type, new_loc.0) {
+        match (piece_type, new_loc.get_x()) {
             (Tile::BlackChecker, 0) => {
-                self.board[new_loc.0 as usize][new_loc.1 as usize] = Tile::BlackKing; 
+                self.board[new_loc.get_x() as usize][new_loc.get_x() as usize] = Tile::BlackKing; 
             },
             (Tile::WhiteChecker, size) if size == self.size as i32 -1 => {
-                self.board[new_loc.0 as usize][new_loc.1 as usize] = Tile::WhiteKing; 
+                self.board[new_loc.get_x() as usize][new_loc.get_x() as usize] = Tile::WhiteKing; 
             },
             (_, _) => {/*Do nothing*/}
         }
