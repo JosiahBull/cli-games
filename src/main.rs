@@ -4,15 +4,26 @@ use std::io::{self, Read};
 mod board;
 use board::*;
 
-pub const ALPHABET: &[char] = &['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const ALPHABET: &[char] = &['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+const MAX_MOVES: usize = 40;
 
-fn convert_letter_to_int(letter: &char) -> usize {
+fn convert_letter_to_int(letter: &char) -> Result<i32, String> {
     for (i, cha) in ALPHABET.iter().enumerate() {
         if cha == letter {
-            return i;
+            return Ok(i as i32);
         }
     }
-    panic!("Failed to find letter, something screwy was entered!");
+    Err("char not recognised".into())
+}
+
+fn get_move(msg: &str) -> Result<(i32, i32), String> {
+    println!("{}", msg);
+    let mut piece = String::new();
+    io::stdin().read_line(&mut piece).expect("Unable to read io stream to get input");
+    if &piece.len() < &2 {
+        return Err("Not enough chars entered!".into());
+    }
+    Ok((convert_letter_to_int(&piece.chars().nth(0).unwrap())?, convert_letter_to_int(&piece.chars().nth(1).unwrap())?))
 }
 
 fn main() {
@@ -28,12 +39,26 @@ fn main() {
 
     while !board.check_over() {
         board.print_board();
-        let mut piece = String::new();
-        let mut moved = String::new();
-        println!("Select the piece you would like to move e.g. 'AA': ");
-        io::stdin().read_line(&mut piece).expect("Failed to parse input as string");
-        println!("Select where the piece {} should go: ", piece.strip_suffix("\n").unwrap());
-        io::stdin().read_line(&mut moved).expect("Failed to parse input as string");
-        board.make_move((convert_letter_to_int(&piece.chars().nth(0).unwrap()), convert_letter_to_int(&piece.chars().nth(1).unwrap())), (convert_letter_to_int(&moved.chars().nth(0).unwrap()), convert_letter_to_int(&moved.chars().nth(1).unwrap())));
+        let piece: (i32, i32) = match get_move("Select the piece you would like to move e.g. 'AA': ") {
+            Ok(f) => f,
+            Err(e) => {
+                println!("{}", e);
+                continue;
+            }
+        };
+        let new_loc: (i32, i32) = match get_move("Select where the piece should go: ") {
+            Ok(f) => f,
+            Err(e) => {
+                println!("{}", e);
+                continue;
+            }
+        };
+
+        if let Err(message) = board.make_move(piece, new_loc) {
+            println!("Wrong move! Try again. Reason: {}", message);
+            continue;
+        }
+
     }
+    println!("Congratulations! Thank you for playing my dude!")
 }
