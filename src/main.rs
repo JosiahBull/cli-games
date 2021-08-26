@@ -1,6 +1,8 @@
 ///This class is the game controller, which implements our main loop
 use std::io::{self, Read};
 
+use colored::*;
+
 mod board;
 use board::*;
 
@@ -60,5 +62,6 @@ fn main() {
         }
 
     }
+    board.print_board();
     println!("Congratulations! Thank you for playing my dude!")
 }

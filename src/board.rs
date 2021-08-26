@@ -1,7 +1,7 @@
 ///This class represents the board state
 use crate::{ALPHABET, MAX_MOVES};
 
-extern crate termion;
+use colored::*;
 
 ///Represents a sqaure on the board, and all the possible states it could be in.
 #[derive(PartialEq, Clone, Copy)]
@@ -23,10 +23,10 @@ impl std::fmt::Display for Tile {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::result::Result<(), std::fmt::Error>{
         match *self {
             Tile::EmptySqaure => fmt.write_str("*"),
-            Tile::WhiteChecker => fmt.write_str("C"),
-            Tile::WhiteKing => fmt.write_str("K"),
-            Tile::BlackChecker => fmt.write_str("J"),
-            Tile::BlackKing => fmt.write_str("L"),
+            Tile::WhiteChecker => fmt.write_str(&"C".red().to_string()),
+            Tile::WhiteKing => fmt.write_str(&"K".red().to_string()),
+            Tile::BlackChecker => fmt.write_str(&"C".blue().to_string()),
+            Tile::BlackKing => fmt.write_str(&"K".blue().to_string()),
         }
     }
 }
