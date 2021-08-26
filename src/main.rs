@@ -1,4 +1,5 @@
-//*This class is the game controller, which implements our main loop
+//! Welcome to Bex's Checkers Game
+//! The main.rs represents the controller, documentation for other classes can be found below.
 use std::io;
 
 mod board;

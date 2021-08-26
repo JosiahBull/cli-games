@@ -1,4 +1,4 @@
-//*This class represents the board state
+//! This class represents the board state
 use crate::{ALPHABET, MAX_MOVES};
 
 use colored::*;
